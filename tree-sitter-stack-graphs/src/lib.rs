@@ -681,13 +681,17 @@ impl<'a> Builder<'a> {
         // (2) it returns no values connected to 'a.
         // These together guarantee that no values connected to the lifetime 'a outlive the Tree.
         let tree: &'a tree_sitter::Tree = unsafe { transmute(&tree) };
-        self.sgl.tsg.execute_into(
+        let execution_result = self.sgl.tsg.execute_into(
             &mut self.graph,
             tree,
             self.source,
             &mut config,
             &(cancellation_flag as &dyn CancellationFlag),
-        )?;
+        );
+
+        if let Err(err) = execution_result {
+            eprintln!("⚠️  Skipping offending TSG statement: {err}");
+        }
 
         self.load(cancellation_flag)
     }
